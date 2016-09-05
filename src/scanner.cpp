@@ -438,7 +438,7 @@ Scanner::must_stop(){
 }
 
 int
-Scanner::scan()
+Scanner::scan(bool* params_changed)
 {
 	int i, j, j2, f, n_read, offset, bin_e, bin_len, buf_len, ds, ds_p;
 	int32_t w;
@@ -447,7 +447,7 @@ Scanner::scan()
 	bin_len = 1 << bin_e;
 	buf_len = m_tunes[0].buf_len;
 	for (i=0; i<m_tune_count; i++) {
-		if (m_must_stop > 0)
+		if (*params_changed)
 			return SCANNER_NOK;
 
 		ts = &m_tunes[i];
@@ -556,6 +556,16 @@ Scanner::get_error(int s)
 	return "";
 }
 
+void Scanner::set_gain(int gain)
+{
+	m_rtl_device.set_gain(gain);
+}
+
+void Scanner::set_auto_gain()
+{
+	m_rtl_device.set_gain(RTL_GAIN_AUTO);
+}
+
 int
 Scanner::init_scanner(int lower_frep, int upper_freq, int bin_len, double crop, int rtl_dev_index, bool direct_sampling,
 					  bool offset_tuning, int gain, int ppm_error, window_types win_type)
@@ -598,9 +608,9 @@ Scanner::init_scanner(int lower_frep, int upper_freq, int bin_len, double crop, 
 		std::cerr << "frequency_range error : " << get_error(status) << std::endl;
 	}
 
-	if (m_rtl_device.device_connected()){
-		m_rtl_device.close_device();
-	}
+//	if (m_rtl_device.device_connected()){
+//		m_rtl_device.close_device();
+//	}
 
 
 	if (!m_rtl_device.device_connected()){
@@ -620,7 +630,7 @@ Scanner::init_scanner(int lower_frep, int upper_freq, int bin_len, double crop, 
 			return SCANNER_DEVICE_ERROR;
 	}
 
-	if (gain == -1){
+	if (gain == -10000){
 		status = m_rtl_device.set_auto_gain();
 		if(status != RTL_OK)
 			return SCANNER_DEVICE_ERROR;
@@ -711,11 +721,12 @@ Scanner::compute_fft(Scan_result& res, tuning_state* ts)
 }
 
 int
-Scanner::compute_ffts(std::vector<Scan_result>& res)
+Scanner::compute_ffts(std::vector<Scan_result>& res, bool* params_changed)
 {
 	res.resize(m_tune_count);
-#pragma omp parallel for
 	for (int i=0; i<m_tune_count; i++) {
+		if (*params_changed)
+			return SCANNER_NOK;
 		compute_fft(res[i], &m_tunes[i]);
 	}
 	return 0;

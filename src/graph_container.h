@@ -15,6 +15,7 @@ public:
 	Graph_container(int X,int Y,int W,int H,const char*L=0);
 	void reset();
 	void set_buffer(std::vector<float>* buffer);
+	void set_window(float startx, float stopx, float starty, float stopy);
 protected:
 	void resize(int X,int Y,int W,int H);
 };

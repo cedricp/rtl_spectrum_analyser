@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string>
 
+extern void ui_draw_complete(bool);
+
 std::string convert_to_metric(float in, std::string unitname = ""){
 	char buff[10];
 	bool sign = in < 0.;
@@ -76,6 +78,17 @@ Gl_graph_widget::Gl_graph_widget(int X,int Y,int W,int H, Fl_Scrollbar* sb, cons
 Gl_graph_widget::~Gl_graph_widget(){
 	m_tooltip->hide();
 	delete m_tooltip;
+}
+
+void
+Gl_graph_widget::reset(){
+	m_start_x = m_start_x_orig;
+	m_stop_x  = m_stop_x_orig;
+
+	m_start_y = m_start_y_orig;
+	m_stop_y  = m_stop_y_orig;
+	valid(0);
+	redraw();
 }
 
 void
@@ -328,8 +341,9 @@ Gl_graph_widget::draw_text(int numx, int numy){
 	numy *= zoom_factor_y;
 	const float stepx = lengthx / float(numx);
 	const float stepy = lengthy / float(numy);
+	int mx, my;
 
-	gl_font(0, 20);
+	gl_font(FL_HELVETICA, 8);
 	glColor3f(0, .6, 0);
 	float epsilon_offset = (m_stop_x - m_start_x) *0.01;
 	float epsilon_offset_y = (m_stop_y - m_start_y) *0.01;
@@ -337,7 +351,9 @@ Gl_graph_widget::draw_text(int numx, int numy){
 		float screen_x = m_start_x_orig + (stepx * i);
 		if (screen_x >= m_start_x && screen_x < m_stop_x){
 			std::string str = convert_to_metric(screen_x * 1000, "s");
-			gl_draw(str.c_str(), screen_x, m_start_y + epsilon_offset_y);
+			gl_measure(str.c_str(), mx, my);
+			mx /= 2;
+			gl_draw(str.c_str(), screen_x - mx, m_start_y + epsilon_offset_y);
 		}
 	}
 
@@ -345,7 +361,9 @@ Gl_graph_widget::draw_text(int numx, int numy){
 		float screen_y = m_start_y_orig + (stepy * i);
 		if (screen_y >= m_start_y && screen_y < m_stop_y){
 			std::string str = convert_to_metric(screen_y, "dBm");
-			gl_draw(str.c_str(), m_start_x + epsilon_offset, screen_y);
+			gl_measure(str.c_str(), mx, my);
+			my /= 2;
+			gl_draw(str.c_str(), m_start_x + epsilon_offset, screen_y - my);
 		}
 	}
 }
@@ -445,6 +463,7 @@ Gl_graph_widget::draw() {
 	}
 
 	draw_text(m_grid_div_x, m_grid_div_y);
+	ui_draw_complete(true);
 }
 
 void
@@ -465,10 +484,12 @@ Gl_graph_widget::set_brightness(double new_fg, double new_bg)
 void
 Gl_graph_widget::set_data_window(float startx, float stopx, float starty, float stopy){
 	// Divide by 1000 to avoid opengl draw flaws
-	m_start_x = m_start_x_orig	= startx / 1000;
+	m_start_x = m_start_x_orig	= startx / 1000.;
 	m_start_y = m_start_y_orig	= starty;
-	m_stop_x  = m_stop_x_orig	= stopx / 1000;
+	m_stop_x  = m_stop_x_orig	= stopx / 1000.;
 	m_stop_y  = m_stop_y_orig 	= stopy;
 	m_scroll_bar->slider_size( 1.f );
 	m_scroll_bar->bounds(m_start_x_orig, m_stop_x_orig);
+	valid(0);
+	redraw();
 }

@@ -12,8 +12,14 @@ Graph_container::Graph_container(int X,int Y,int W,int H,const char*L) : Fl_Doub
 	m_scroll_bar->slider_size(.5);
 	m_scroll_bar->bounds(0,100);
 	m_graph_view = new Gl_graph_widget(10, 10, w()-20, h()-40, m_scroll_bar);
-	m_graph_view->set_data_window(105000000, 108000000, -80, 20);
+	m_graph_view->set_data_window(88000000, 108000000, -80, 20);
 	end();
+}
+
+void
+Graph_container::set_window(float startx, float stopx, float starty, float stopy)
+{
+	m_graph_view->set_data_window(startx, stopx, starty, stopy);
 }
 
 void

@@ -3,8 +3,6 @@
 
 #include "scanner.h"
 
-#define RTL_GAIN_AUTO -1
-
 struct Scanner_settings{
 	Scanner_settings();
 	int lower_freq, upper_freq, step_freq;
@@ -18,11 +16,13 @@ struct Scanner_settings{
 	bool params_changed;
 };
 
-Scanner_settings* get_scanner_settings();
-void* scanner_thread(void* user_data);
-void start_scanner_thread();
-void join_scanner_thread();
+Scanner_settings& get_scanner_settings();
+void 	set_ui_ready();
+void* 	scanner_thread(void* user_data);
+void 	start_scanner_thread();
+void 	join_scanner_thread();
+void 	terminate_scanner_thread();
 
-void terminate_scanner_thread();
+void	ui_draw_complete(bool complete);
 
 #endif

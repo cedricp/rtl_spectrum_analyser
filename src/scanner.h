@@ -24,6 +24,8 @@ enum window_types {
 #define SCANNER_NOK					-3
 #define SCANNER_MEMORY_ERROR		-4
 
+#define RTL_GAIN_AUTO -10000
+
 struct Scan_result
 {
 	int length;
@@ -85,15 +87,17 @@ class Scanner{
 	void downsample_iq(int16_t *data, int length);
 	int  must_stop();
 	void destroy_tunes_memory();
-	int compute_fft(Scan_result& res, tuning_state* ts);
+	int  compute_fft(Scan_result& res, tuning_state* ts);
+	void set_gain(int gain);
+	void set_auto_gain();
 public:
 	Scanner();
 	~Scanner();
 	int  init_scanner(int lower_frep, int upper_freq, int bin_len, double crop, int rtl_dev_index, bool direct_sampling,
 					  bool offset_tuning, int gain, int ppm_error, window_types win_type);
-	int scan();
+	int scan(bool* params_changed);
 	const scan_info& get_scan_info(){return m_scan_info;}
-	int compute_ffts(std::vector<Scan_result>& res);
+	int compute_ffts(std::vector<Scan_result>& res, bool* params_changed);
 	Rtl_dev& get_rtl_device(){return m_rtl_device;}
 	std::string get_error(int s);
 };
