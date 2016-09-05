@@ -1,3 +1,9 @@
+/*
+ * (c) 2016 Cedric PAILLE
+ * Simple Spectrum Analyzer for RTL Dongle
+ *
+ */
+
 #include "graph_container.h"
 #include "graph_widget.h"
 

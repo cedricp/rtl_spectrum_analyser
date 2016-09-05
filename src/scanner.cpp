@@ -39,7 +39,7 @@
  */
 
 /*
- * Modified to work within the application
+ * Modified to work within the GUI application
  * 2016 - Cedric PAILLE (cedricpaille@gmail.com)
  *
  */
@@ -608,9 +608,9 @@ Scanner::init_scanner(int lower_frep, int upper_freq, int bin_len, double crop, 
 		std::cerr << "frequency_range error : " << get_error(status) << std::endl;
 	}
 
-//	if (m_rtl_device.device_connected()){
-//		m_rtl_device.close_device();
-//	}
+	if (m_rtl_device.device_connected()){
+		m_rtl_device.close_device();
+	}
 
 
 	if (!m_rtl_device.device_connected()){

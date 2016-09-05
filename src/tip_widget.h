@@ -1,3 +1,9 @@
+/*
+ * (c) 2016 Cedric PAILLE
+ * Simple Spectrum Analyzer for RTL Dongle
+ *
+ */
+
 #ifndef TIP_WIDGET_H
 #define TIP_WIDGET_H
 

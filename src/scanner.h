@@ -1,3 +1,9 @@
+/*
+ * (c) 2016 Cedric PAILLE
+ * Simple Spectrum Analyzer for RTL Dongle
+ *
+ */
+
 #ifndef SCANNER_H
 #define SCANNER_H
 #include <unistd.h>

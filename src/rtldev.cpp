@@ -1,3 +1,9 @@
+/*
+ * (c) 2016 Cedric PAILLE
+ * Simple Spectrum Analyzer for RTL Dongle
+ *
+ */
+
 #include "rtl-sdr.h"
 #include "rtldev.h"
 #include <unistd.h>

@@ -1,3 +1,9 @@
+/*
+ * (c) 2016 Cedric PAILLE
+ * Simple Spectrum Analyzer for RTL Dongle
+ *
+ */
+
 #include <FL/Fl.H>
 #include "scanner_thread.h"
 #include <vector>
@@ -57,6 +63,7 @@ void* scanner_thread(void* user_data)
 									  scan_settings.crop, scan_settings.rtl_dev_index, scan_settings.direct_sampling,
 									  scan_settings.direct_sampling, scan_settings.gain, scan_settings.ppm_correction,
 									  scan_settings.window_type);
+
 		if (status != SCANNER_OK){
 			printf("Scanning issue, check RTL dongle connection or scan parameters...(%s)\n", scanner.get_error(status).c_str());
 			usleep(1000000);

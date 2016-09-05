@@ -1,3 +1,9 @@
+/*
+ * (c) 2016 Cedric PAILLE
+ * Simple Spectrum Analyzer for RTL Dongle
+ *
+ */
+
 #ifndef GRAPH_WIDGET_H
 #define GRAPH_WIDGET_H
 

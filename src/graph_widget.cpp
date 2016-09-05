@@ -1,3 +1,9 @@
+/*
+ * (c) 2016 Cedric PAILLE
+ * Simple Spectrum Analyzer for RTL Dongle
+ *
+ */
+
 #include <graph_widget.h>
 #include <tip_widget.h>
 #include <FL/Fl.H>

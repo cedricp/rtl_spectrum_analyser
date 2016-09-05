@@ -1,3 +1,10 @@
+/*
+ * (c) 2016 Cedric PAILLE
+ * Simple Spectrum Analyzer for RTL Dongle
+ *
+ * Code borrowed from RTL-SDR project (see scanner.cpp)
+ */
+
 #include <math.h>
 
 double rectangle(int i, int length)
