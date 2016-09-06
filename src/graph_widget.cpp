@@ -432,15 +432,24 @@ Gl_graph_widget::draw() {
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				glBegin(GL_QUADS);
 				for (int i = start; i < data_size - 1; i += cstep){
+					float avg_data1 = 0.;
+					float avg_data2 = 0.;
+					for (int j = 0; j < cstep; ++j){
+						avg_data1 += (*m_data_buffer)[i+j];
+						avg_data2 += (*m_data_buffer)[i+j+1];
+					}
+					avg_data1 /= cstep;
+					avg_data2 /= cstep;
+
 					float offset = m_start_y_orig;
 					float scale = 1. / (m_stop_y_orig - m_start_y_orig);
 					glColor4f(0, 0, 0, .5);
 					glVertex2f(inc, m_start_y);
-					glColor4f(0, 0, ((*m_data_buffer)[i] - offset) * scale, .5);
-					glVertex2f(inc, (*m_data_buffer)[i]);
+					glColor4f(0, 0, (avg_data1 - offset) * scale, .5);
+					glVertex2f(inc, avg_data1);
 					inc += step * cstep;
-					glColor4f(0, 0, ((*m_data_buffer)[i+cstep] - offset) * scale, .5);
-					glVertex2f(inc, (*m_data_buffer)[i+cstep]);
+					glColor4f(0, 0, (avg_data2 - offset) * scale, .5);
+					glVertex2f(inc, avg_data2);
 					glColor4f(0, 0, 0., .5);
 					glVertex2f(inc, m_start_y);
 					if (inc > m_stop_x)
@@ -452,18 +461,24 @@ Gl_graph_widget::draw() {
 			glEnable( GL_LINE_SMOOTH );
 			glHint( GL_LINE_SMOOTH_HINT, GL_FASTEST );
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glLineWidth(1.5);
 
 			glColor3f(fg, fg, fg);
 			glBegin(GL_LINE_STRIP);
 			inc = m_start_x_orig;
 			inc += start;
-			cstep = (m_stop_x - m_start_x) / m_width / 2;
+			cstep = (m_stop_x - m_start_x) / m_width;
 			cstep = cstep < 1 ? 1 : cstep;
 			for (int i = start; i < data_size; i += cstep){
-				 glVertex2f(inc, (*m_data_buffer)[i]);
-				 inc += step * cstep;
-				 if (inc - cstep > m_stop_x)
-					 break;
+				float avg_data = 0.;
+				for (int j = 0; j < cstep; ++j){
+					avg_data += (*m_data_buffer)[i+j];
+				}
+				avg_data /= cstep;
+			glVertex2f(inc, avg_data);
+			inc += step * cstep;
+			if (inc - cstep > m_stop_x)
+				break;
 			}
 			glEnd();
 		}
