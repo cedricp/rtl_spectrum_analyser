@@ -108,19 +108,11 @@ Scanner::Scanner()
 	m_sinewave = NULL;
 	m_window_coefs = NULL;
 	m_fft_buf = NULL;
-	m_must_stop = 0;
 }
 
 Scanner::~Scanner()
 {
 	destroy_tunes_memory();
-
-	if (m_sinewave)
-		free(m_sinewave);
-	if (m_fft_buf)
-		free(m_fft_buf);
-	if (m_window_coefs)
-		free(m_window_coefs);
 
 	if (m_rtl_device.device_connected())
 		m_rtl_device.close_device();
@@ -134,6 +126,13 @@ Scanner::destroy_tunes_memory()
 		free(ts->avg);
 		free(ts->buf8);
 	}
+
+	if (m_sinewave)
+		free(m_sinewave);
+	if (m_fft_buf)
+		free(m_fft_buf);
+	if (m_window_coefs)
+		free(m_window_coefs);
 }
 
 void
@@ -433,11 +432,6 @@ Scanner::downsample_iq(int16_t *data, int length)
 }
 
 int
-Scanner::must_stop(){
-	return m_must_stop;
-}
-
-int
 Scanner::scan(bool* params_changed)
 {
 	int i, j, j2, f, n_read, offset, bin_e, bin_len, buf_len, ds, ds_p;
@@ -474,7 +468,6 @@ Scanner::scan(bool* params_changed)
 				fprintf(stderr, "Warning: dropped samples.\n");
 			}
 			if (read_status == RTL_CONNECTION_ERROR)
-				m_must_stop = 1;
 				break;
 		}
 		/* rms */
@@ -543,7 +536,7 @@ Scanner::get_error(int s)
 {
 	switch(s){
 	case SCANNER_MEMORY_ERROR:
-		return "memory allocation failed";
+		return "Memory allocation failed";
 	case SCANNER_DEVICE_ERROR:
 		return "SDR device error";
 	case SCANNER_DEVICE_CONNECTION:
@@ -710,8 +703,7 @@ Scanner::compute_fft(Scan_result& res, tuning_state* ts)
 	}
 	dbm = (double)ts->avg[i2] / ((double)ts->rate * (double)ts->samples);
 	if (ts->bin_e == 0) {
-		dbm = ((double)ts->avg[0] / \
-		((double)ts->rate * (double)ts->samples));}
+		dbm = ((double)ts->avg[0] / ((double)ts->rate * (double)ts->samples));}
 	dbm  = 10 * log10(dbm);
 	res.buffer[count++] = dbm;
 	for (i=0; i<len; i++) {

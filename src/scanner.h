@@ -81,7 +81,6 @@ class Scanner{
 	tuning_state m_tunes[MAX_TUNES];
 	scan_info	 m_scan_info;
 	Rtl_dev		 m_rtl_device;
-	int			 m_must_stop;
 
 	void make_sine_table(int size);
 	int  fix_fft(int16_t iq[], int m);
@@ -91,7 +90,6 @@ class Scanner{
 	void remove_dc(int16_t *data, int length);
 	void generic_fir(int16_t *data, int length, int *fir);
 	void downsample_iq(int16_t *data, int length);
-	int  must_stop();
 	void destroy_tunes_memory();
 	int  compute_fft(Scan_result& res, tuning_state* ts);
 	void set_gain(int gain);

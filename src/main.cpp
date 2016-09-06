@@ -191,6 +191,8 @@ public:
 		m_power_meter->value(x);
 		if (x > -20.)
 			m_power_meter->selection_color(FL_GREEN);
+		else if (x > -40)
+			m_power_meter->selection_color(FL_YELLOW);
 		else
 			m_power_meter->selection_color(FL_RED);
 	}
@@ -235,6 +237,7 @@ public:
     void reset_view(){
     	m_graph_container->reset();
     }
+
     void set_buffer(std::vector<float>* buff){
     	m_graph_container->set_buffer(buff);
     	m_parameter_widgt->set_power(m_graph_container->get_power_at_cursor());

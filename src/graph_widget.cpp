@@ -84,7 +84,7 @@ Gl_graph_widget::Gl_graph_widget(int X,int Y,int W,int H, Fl_Scrollbar* sb, cons
 
 Gl_graph_widget::~Gl_graph_widget(){
 	m_tooltip->hide();
-	delete m_tooltip;
+	fl_cursor(FL_CURSOR_DEFAULT);
 }
 
 void
@@ -126,10 +126,12 @@ Gl_graph_widget::handle(int e)
 		case FL_ENTER:
 			ret = 1;
 			m_tooltip->show();
+			cursor(FL_CURSOR_CROSS);
 			break;
 		case FL_LEAVE:
 		case FL_HIDE:
 			m_tooltip->hide();
+			cursor(FL_CURSOR_DEFAULT);
 			ret = 1;
 			break;
 		case FL_MOVE:
@@ -164,7 +166,7 @@ Gl_graph_widget::handle(int e)
 	float vx, vy;
 	get_mouse_coordinates(vx, vy);
 	m_tooltip->position(Fl::event_x_root(), Fl::event_y_root()+20);
-	m_tooltip->value(vx, vy);
+	m_tooltip->value(vx / 1000., vy);
 
 	if (key != -1 && Fl::event_shift() == 0){
 		if (key == 65451 && m_grid_div_x < 30){
