@@ -11,6 +11,7 @@
 #include <FL/Fl_Spinner.H>
 #include <FL/Fl_Slider.H>
 #include <FL/Fl_Choice.H>
+#include <FL/Fl_Progress.H>
 #include <stdio.h>
 #include <math.h>
 #include <graph_container.h>
@@ -19,13 +20,6 @@
 #include <unistd.h>
 #include <vector>
 #include "scanner_thread.h"
-
-Fl_Menu_Item windows_popup[] = {
-		{"HAMMING"},
-		{"RECTANGLE"},
-		{"BLACKMAN"},
-		{0}
-};
 
 class FrequencyCounter : public Fl_Counter
 {
@@ -89,12 +83,18 @@ protected:
 class ParametersWidget : public Fl_Double_Window{
 public:
 	ParametersWidget(int X, int Y, int W,int H,Graph_container* graph, const char*L=0) : Fl_Double_Window(X, Y, W,H,L) , m_settings (get_scanner_settings()) {
-		m_center = new FrequencyCounter(10, 10, W - 20, 20, "Center Frequency (Mhz)");
-		m_fbw = new FrequencyCounter(10, 50, W - 20, 20, "Bandwidth (MHz)");
+		m_startfreq = new FrequencyCounter(10, 10, W - 20, 20, "Start Frequency (Mhz)");
+		m_stopfreq = new FrequencyCounter(10, 50, W - 20, 20, "Stop Frequency (MHz)");
 		m_span = new FrequencyCounter(10, 90, W - 20, 20, "Span (KHz)");
 		m_ppm_slider = new Fl_Slider(10, 140, W - 20, 20, "PPM Correction");
 		m_crop_slider = new Fl_Slider(10, 190, W - 20, 20, "Crop %");
-		m_windows_choice = new Fl_Choice(10, 240, W - 20, 20);
+		m_gain_slider = new Fl_Slider(10, 240, W - 20, 20, "Gain :");
+		m_windows_choice = new Fl_Choice(10, 280, W - 20, 20);
+		m_power_meter = new Fl_Progress(10, 310, W -20, 20, "Power meter");
+
+		m_power_meter->type(FL_HORIZONTAL);
+		m_power_meter->minimum(-80);
+		m_power_meter->maximum(0.);
 
 		m_windows_choice->add("RECTANGLE");
 		m_windows_choice->add("HAMMING");
@@ -111,15 +111,19 @@ public:
 		m_crop_slider->range(0, 100);
 		m_crop_slider->value(20);
 
-		m_center->minimum(20.);
-		m_center->maximum(1800.);
-		m_center->value(100.);
-		m_center->set_step(1., 10., 100.);
+		m_gain_slider->type(FL_HORIZONTAL);
+		m_gain_slider->range(-1, 50);
+		m_gain_slider->value(-1);
 
-		m_fbw->minimum(0.1);
-		m_fbw->maximum(900.);
-		m_fbw->set_step(0.1, 1., 10.);
-		m_fbw->value(2.);
+		m_startfreq->minimum(20.);
+		m_startfreq->maximum(1800.);
+		m_startfreq->value(88.);
+		m_startfreq->set_step(1., 10., 100.);
+
+		m_stopfreq->minimum(21.);
+		m_stopfreq->maximum(1800.);
+		m_stopfreq->set_step(1., 10., 100.);
+		m_stopfreq->value(108.);
 
 		m_span->minimum(0.001);
 		m_span->maximum(900000.);
@@ -128,12 +132,12 @@ public:
 		m_ppm_slider->range(-100, 100);
 		m_ppm_slider->value(0.);
 
-		m_center->callback(value_callback, this);
-		m_fbw->callback(value_callback, this);
+		m_startfreq->callback(value_callback, this);
+		m_stopfreq->callback(value_callback, this);
 		m_span->callback(value_callback, this);
 		m_ppm_slider->callback(value_callback, this);
 		m_crop_slider->callback(value_callback, this);
-
+		m_gain_slider->callback(value_callback, this);
 		end();
 		m_graph = graph;
 		refresh_graph_window();
@@ -143,10 +147,30 @@ public:
 		int percent = m_crop_slider->value();
 		snprintf(m_crop_buff, 32, "Crop : %i\%%", (int)percent);
 
-		float bw2 = m_fbw->value() / 2;
-		float start_freq = m_center->value() - bw2;
-		float stop_freq = m_center->value() + bw2;
+		float start_freq = m_startfreq->value();
+		float stop_freq = m_stopfreq->value();
 		float span = m_span->value();
+
+		if (stop_freq <= start_freq){
+			stop_freq = start_freq + 2;
+			m_stopfreq->value(stop_freq);
+		}
+
+		if (span < 0.01){
+			span = 0.01;
+			m_span->value(span);
+		}
+
+		int gain = m_gain_slider->value();
+		if (gain == -1){
+			m_gain_slider->label("Automatic Gain Control");
+			m_settings.gain = RTL_GAIN_AUTO;
+		} else {
+			snprintf(m_gain_buff, 32, "Gain : %i dB", gain);
+			m_settings.gain = gain * 10;
+			m_gain_slider->label(m_gain_buff);
+		}
+
 		m_crop_slider->label(m_crop_buff);
 		m_settings.lower_freq = 1000000. * start_freq;
 		m_settings.upper_freq = 1000000. * stop_freq;
@@ -160,15 +184,26 @@ public:
 		m_ppm_slider->label(m_ppm_buff);
 
 		m_graph->set_window(m_settings.lower_freq, m_settings.upper_freq, -80, 10);
+		// Ask FLTK to redraw panel
+		damage(FL_DAMAGE_ALL);
+	}
+	void set_power(float x){
+		m_power_meter->value(x);
+		if (x > -20.)
+			m_power_meter->selection_color(FL_GREEN);
+		else
+			m_power_meter->selection_color(FL_RED);
 	}
 private:
 	Graph_container  *m_graph;
-	FrequencyCounter *m_fbw, *m_center, *m_span;
-	Fl_Slider 		 *m_crop_slider, *m_ppm_slider;
+	FrequencyCounter *m_stopfreq, *m_startfreq, *m_span;
+	Fl_Slider 		 *m_crop_slider, *m_ppm_slider, *m_gain_slider;
 	Fl_Choice	     *m_windows_choice;
+	Fl_Progress		 *m_power_meter;
 	Scanner_settings& m_settings;
 	char 		      m_crop_buff[32];
-	char 		      m_ppm_buff[32];
+	char 		      m_ppm_buff[32],m_gain_buff[32];
+
 	static void value_callback(Fl_Widget* w, void *data){
 		ParametersWidget* pw = (ParametersWidget*)data;
 		FrequencyCounter* f = (FrequencyCounter*)w;
@@ -202,6 +237,7 @@ public:
     }
     void set_buffer(std::vector<float>* buff){
     	m_graph_container->set_buffer(buff);
+    	m_parameter_widgt->set_power(m_graph_container->get_power_at_cursor());
     }
 };
 

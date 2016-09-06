@@ -27,6 +27,7 @@ public:
     static void scroll_callback(Fl_Widget*, void *);
     void set_fill(bool on){m_fill_under = on; redraw();}
     bool get_selection_bounding_box(float &x0, float&y0, float &x1, float &y1);
+    float get_power_at_cursor();
 private:
     void get_mouse_coordinates(float& x, float& y);
 	double fg;                       // foreground brightness
@@ -43,6 +44,8 @@ private:
     int 	m_mousex, m_mousey;
     float 	m_frozen_x, m_frozen_y;
     float 	m_selection_x, m_selection_y;
+    float	m_cursor_x, m_cursor_y;
+    bool	m_cursor_active;
     bool  	m_selection_active;
     int 	m_button;
     int 	m_dragging;

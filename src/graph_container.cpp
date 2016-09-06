@@ -28,6 +28,12 @@ Graph_container::set_window(float startx, float stopx, float starty, float stopy
 	m_graph_view->set_data_window(startx, stopx, starty, stopy);
 }
 
+float
+Graph_container::get_power_at_cursor()
+{
+	return m_graph_view->get_power_at_cursor();
+}
+
 void
 Graph_container::resize(int X,int Y,int W,int H) {
 	Fl_Window::resize(X,Y,W,H);

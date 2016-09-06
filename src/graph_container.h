@@ -22,6 +22,7 @@ public:
 	void reset();
 	void set_buffer(std::vector<float>* buffer);
 	void set_window(float startx, float stopx, float starty, float stopy);
+	float get_power_at_cursor();
 protected:
 	void resize(int X,int Y,int W,int H);
 };

@@ -12,6 +12,7 @@
 static bool terminate = false;
 static Scanner_settings scan_settings;
 static pthread_t tid;
+static pthread_mutex_t ui_mutex;
 static bool ui_ready = false;
 static bool ui_draw_finished = true;
 
@@ -22,8 +23,11 @@ void set_ui_ready()
 
 void ui_draw_complete(bool complete)
 {
+	pthread_mutex_lock(&ui_mutex);
 	ui_draw_finished = complete;
+	pthread_mutex_unlock(&ui_mutex);
 }
+
 
 Scanner_settings& get_scanner_settings()
 {
@@ -53,6 +57,7 @@ void* scanner_thread(void* user_data)
 {
 	int status;
 	Scanner scanner;
+	pthread_mutex_init(&ui_mutex, NULL);
 
 	while (ui_ready == false){
 		usleep(2000);
@@ -93,13 +98,15 @@ void* scanner_thread(void* user_data)
 					break;
 			}
 
-			ui_draw_finished = false;
+			ui_draw_complete(false);
 			Fl::awake((void*)vecbuf);
 
 			if (terminate)
 				break;
 		}
 	}
+
+	pthread_mutex_destroy(&ui_mutex);
 }
 
 void

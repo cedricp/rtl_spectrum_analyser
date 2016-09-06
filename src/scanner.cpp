@@ -724,10 +724,10 @@ int
 Scanner::compute_ffts(std::vector<Scan_result>& res, bool* params_changed)
 {
 	res.resize(m_tune_count);
+#pragma omp parallel for
 	for (int i=0; i<m_tune_count; i++) {
-		if (*params_changed)
-			return SCANNER_NOK;
-		compute_fft(res[i], &m_tunes[i]);
+		if (!*params_changed)
+			compute_fft(res[i], &m_tunes[i]);
 	}
 	return 0;
 }

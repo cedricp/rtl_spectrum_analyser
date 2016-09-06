@@ -78,6 +78,7 @@ Gl_graph_widget::Gl_graph_widget(int X,int Y,int W,int H, Fl_Scrollbar* sb, cons
 	m_scroll_bar = sb;
 	m_data_buffer = NULL;
 	m_selection_active = false;
+	m_cursor_active = false;
 	sb->callback(scroll_callback, this);
 }
 
@@ -120,6 +121,7 @@ Gl_graph_widget::handle(int e)
 	bool moving = false;
 	bool button_press = false;
 	bool button_release = false;
+	bool single_click= false;
 	switch ( e ) {
 		case FL_ENTER:
 			ret = 1;
@@ -144,6 +146,11 @@ Gl_graph_widget::handle(int e)
 			break;
 		case FL_RELEASE:
 			button_release = true;
+			if (!moving && Fl::event_button() == 1){
+				single_click = true;
+				m_cursor_active = true;
+				get_mouse_coordinates(m_cursor_x, m_cursor_y);
+			}
 			m_button = -1;
 			ret = 1;
 			break;
@@ -152,6 +159,7 @@ Gl_graph_widget::handle(int e)
 			ret = 1;
 			break;
 	}
+
 
 	float vx, vy;
 	get_mouse_coordinates(vx, vy);
@@ -213,6 +221,8 @@ Gl_graph_widget::handle(int e)
 		m_selection_active = true;
 	}
 
+	if (single_click)
+		redraw();
 
 	return(ret);
 }
@@ -399,76 +409,88 @@ Gl_graph_widget::draw() {
 	const int data_size = m_data_buffer ? m_data_buffer->size() : 0;
 
 	if (data_size < 2)
-		return;
+		goto FINISH_DRAW;
+	{
+		const float range 	= m_stop_x_orig - m_start_x_orig;
+		const float step 	= range / float(data_size);
+		glDisable( GL_LINE_SMOOTH );
 
-	const float range 	= m_stop_x_orig - m_start_x_orig;
-	const float step 	= range / float(data_size);
-	glDisable( GL_LINE_SMOOTH );
+		draw_grid(m_grid_div_x, m_grid_div_y);
 
-	draw_grid(m_grid_div_x, m_grid_div_y);
+		if (m_data_buffer != NULL){
 
-	if (m_data_buffer != NULL){
+			glEnable (GL_BLEND);
+			glEnable (GL_SMOOTH);
 
-		glEnable (GL_BLEND);
-		glEnable (GL_SMOOTH);
+			float inc = m_start_x_orig;
+			const int start = ((m_start_x - m_start_x_orig) / data_size);
+			inc += start;
+			int cstep = (m_stop_x - m_start_x) / m_width;
+			cstep = cstep < 1 ? 1 : cstep;
 
-		float inc = m_start_x_orig;
-		const int start = ((m_start_x - m_start_x_orig) / data_size);
-		inc += start;
-		int cstep = (m_stop_x - m_start_x) / m_width / 2;
-		cstep = cstep < 1 ? 1 : cstep;
+			if (m_fill_under){
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				glBegin(GL_QUADS);
+				for (int i = start; i < data_size - 1; i += cstep){
+					float offset = m_start_y_orig;
+					float scale = 1. / (m_stop_y_orig - m_start_y_orig);
+					glColor4f(0, 0, 0, .5);
+					glVertex2f(inc, m_start_y);
+					glColor4f(0, 0, ((*m_data_buffer)[i] - offset) * scale, .5);
+					glVertex2f(inc, (*m_data_buffer)[i]);
+					inc += step * cstep;
+					glColor4f(0, 0, ((*m_data_buffer)[i+cstep] - offset) * scale, .5);
+					glVertex2f(inc, (*m_data_buffer)[i+cstep]);
+					glColor4f(0, 0, 0., .5);
+					glVertex2f(inc, m_start_y);
+					if (inc > m_stop_x)
+						break;
+				}
+				glEnd();
+			}
 
-		if (m_fill_under){
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glBegin(GL_QUADS);
-			for (int i = start; i < data_size - 1; i += cstep){
-				float offset = m_start_y_orig;
-				float scale = 1. / (m_stop_y_orig - m_start_y_orig);
-				glColor4f(0, 0, 0, .5);
-				glVertex2f(inc, m_start_y);
-				glColor4f(0, 0, ((*m_data_buffer)[i] - offset) * scale, .5);
-				glVertex2f(inc, (*m_data_buffer)[i]);
-				inc += step * cstep;
-				glColor4f(0, 0, ((*m_data_buffer)[i+cstep] - offset) * scale, .5);
-				glVertex2f(inc, (*m_data_buffer)[i+cstep]);
-				glColor4f(0, 0, 0., .5);
-				glVertex2f(inc, m_start_y);
-				if (inc > m_stop_x)
-					break;
+			glEnable( GL_LINE_SMOOTH );
+			glHint( GL_LINE_SMOOTH_HINT, GL_FASTEST );
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			glColor3f(fg, fg, fg);
+			glBegin(GL_LINE_STRIP);
+			inc = m_start_x_orig;
+			inc += start;
+			cstep = (m_stop_x - m_start_x) / m_width / 2;
+			cstep = cstep < 1 ? 1 : cstep;
+			for (int i = start; i < data_size; i += cstep){
+				 glVertex2f(inc, (*m_data_buffer)[i]);
+				 inc += step * cstep;
+				 if (inc - cstep > m_stop_x)
+					 break;
 			}
 			glEnd();
 		}
 
-		glEnable( GL_LINE_SMOOTH );
-		glHint( GL_LINE_SMOOTH_HINT, GL_FASTEST );
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		glColor3f(fg, fg, fg);
-		glBegin(GL_LINE_STRIP);
-		inc = m_start_x_orig;
-		inc += start;
-		cstep = (m_stop_x - m_start_x) / m_width / 2;
-		cstep = cstep < 1 ? 1 : cstep;
-		for (int i = start; i < data_size; i += cstep){
-			 glVertex2f(inc, (*m_data_buffer)[i]);
-			 inc += step * cstep;
-			 if (inc - cstep > m_stop_x)
-				 break;
+		if (m_cursor_active){
+			glLineWidth(1.);
+			glColor4f(.0, .9, .1, .7);
+			glBegin(GL_LINES);
+			glVertex2f(m_cursor_x, m_start_y);
+			glVertex2f(m_cursor_x, m_stop_y);
+			glEnd();
 		}
-		glEnd();
-	}
-	if (m_selection_active){
-		glColor4f(.7, .7, 0, .2);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glBegin(GL_QUADS);
-		glVertex2f(m_frozen_x, m_frozen_y);
-		glVertex2f(m_frozen_x, m_selection_y);
-		glVertex2f(m_selection_x, m_selection_y);
-		glVertex2f(m_selection_x, m_frozen_y);
-		glEnd();
-	}
 
+		if (m_selection_active){
+			glColor4f(.7, .7, 0, .3);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glBegin(GL_QUADS);
+			glVertex2f(m_frozen_x, m_frozen_y);
+			glVertex2f(m_frozen_x, m_selection_y);
+			glVertex2f(m_selection_x, m_selection_y);
+			glVertex2f(m_selection_x, m_frozen_y);
+			glEnd();
+		}
+	}
 	draw_text(m_grid_div_x, m_grid_div_y);
+
+FINISH_DRAW:
 	ui_draw_complete(true);
 }
 
@@ -498,4 +520,19 @@ Gl_graph_widget::set_data_window(float startx, float stopx, float starty, float 
 	m_scroll_bar->bounds(m_start_x_orig, m_stop_x_orig);
 	valid(0);
 	redraw();
+}
+
+float
+Gl_graph_widget::get_power_at_cursor()
+{
+	if (!m_data_buffer)
+		return -100.;
+	float buff_len = m_data_buffer->size();
+	float graph_width = m_stop_x_orig - m_start_x_orig;
+	float ratio = m_cursor_x - m_start_x_orig;
+	int pos = (ratio / graph_width) * buff_len;
+	if (pos >= 0 && pos < (int)buff_len){
+		return m_data_buffer->at(pos);
+	}
+	return -100.;
 }
