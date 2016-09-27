@@ -12,6 +12,7 @@
 #include <FL/Fl_Slider.H>
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Progress.H>
+#include <FL/Fl_Box.H>
 #include <stdio.h>
 #include <math.h>
 #include <graph_container.h>
@@ -83,6 +84,8 @@ protected:
 class ParametersWidget : public Fl_Double_Window{
 public:
 	ParametersWidget(int X, int Y, int W,int H,Graph_container* graph, const char*L=0) : Fl_Double_Window(X, Y, W,H,L) , m_settings (get_scanner_settings()) {
+		//m_frame = new Fl_Box(0, 0, W, H, "Hey");
+		//m_frame->box(FL_EMBOSSED_FRAME);
 		m_startfreq = new FrequencyCounter(10, 10, W - 20, 20, "Start Frequency (Mhz)");
 		m_stopfreq = new FrequencyCounter(10, 50, W - 20, 20, "Stop Frequency (MHz)");
 		m_span = new FrequencyCounter(10, 90, W - 20, 20, "Span (KHz)");
@@ -196,12 +199,15 @@ public:
 		else
 			m_power_meter->selection_color(FL_RED);
 	}
+protected:
+
 private:
 	Graph_container  *m_graph;
 	FrequencyCounter *m_stopfreq, *m_startfreq, *m_span;
 	Fl_Slider 		 *m_crop_slider, *m_ppm_slider, *m_gain_slider;
 	Fl_Choice	     *m_windows_choice;
 	Fl_Progress		 *m_power_meter;
+	Fl_Box			 *m_frame;
 	Scanner_settings& m_settings;
 	char 		      m_crop_buff[32];
 	char 		      m_ppm_buff[32],m_gain_buff[32];
@@ -226,14 +232,6 @@ public:
         m_parameter_widgt->refresh_graph_window();
     }
 
-    void resize(int X,int Y,int W,int H){
-    	m_graph_container->position(5, 5);
-    	m_graph_container->size(W - 200,H - 5);
-    	m_parameter_widgt->position(W - 200, 5);
-    	m_parameter_widgt->size(W - m_graph_container->w(), H - 5);
-    	redraw();
-    }
-
     void reset_view(){
     	m_graph_container->reset();
     }
@@ -241,6 +239,15 @@ public:
     void set_buffer(std::vector<float>* buff){
     	m_graph_container->set_buffer(buff);
     	m_parameter_widgt->set_power(m_graph_container->get_power_at_cursor());
+    }
+
+protected:
+    void resize(int X,int Y,int W,int H){
+    	m_graph_container->position(5, 5);
+    	m_graph_container->size(W - 200,H - 5);
+    	m_parameter_widgt->position(W - 200, 5);
+    	m_parameter_widgt->size(W - m_graph_container->w(), H - 5);
+    	redraw();
     }
 };
 

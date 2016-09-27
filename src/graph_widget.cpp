@@ -169,10 +169,10 @@ Gl_graph_widget::handle(int e)
 	m_tooltip->value(vx / 1000., vy);
 
 	if (key != -1 && Fl::event_shift() == 0){
-		if (key == 65451 && m_grid_div_x < 30){
+		if (key == FL_KP + '+' && m_grid_div_x < 30){
 			m_grid_div_x++;
 		}
-		if (key == 65453 && m_grid_div_x > 1){
+		if (key == FL_KP + '-' && m_grid_div_x > 1){
 			m_grid_div_x--;
 		}
 		if (key == 'f'){

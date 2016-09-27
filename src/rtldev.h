@@ -50,6 +50,7 @@ public:
 	int  device_connected();
 	std::string get_tuner_type();
 	std::string get_name();
+	std::vector<int> get_tuner_gains();
 };
 
 #endif

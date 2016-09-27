@@ -258,8 +258,8 @@ Scanner::frequency_range(double crop, int upper, int lower, int max_size)
 	for (i=1; i<1500; i++) {
 		bw_seen = (upper - lower) / i;
 		bw_used = (int)((double)(bw_seen) / (1.0 - crop));
-		if (bw_used > MAXIMUM_RATE) {
-			continue;}
+		if (bw_used > MAXIMUM_RATE)
+			continue;
 		m_tune_count = i;
 		break;
 	}

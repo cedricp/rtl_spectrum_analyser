@@ -60,6 +60,22 @@ Rtl_dev::close_device()
 	m_impl->device = NULL;
 }
 
+std::vector<int>
+Rtl_dev::get_tuner_gains()
+{
+	std::vector<int> gains;
+	if (m_device_id >= 0 && m_impl->device){
+		int *g = NULL;
+		int count = rtlsdr_get_tuner_gains(m_impl->device, g);
+		if (g != NULL){
+			for (int i = 0; i < count; ++i){
+				gains.push_back(g[i]);
+			}
+		}
+	}
+	return gains;
+}
+
 int
 Rtl_dev::set_sample_rate(int rate)
 {
